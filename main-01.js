@@ -17,7 +17,7 @@ const App = {
     //   context.state.title
     // );
 
-    return h("div", null, [
+    return h("div", context.state.props, [
       h("p", null, context.state.count),
       h(
         "button",
@@ -36,9 +36,17 @@ const App = {
   setup() {
     const state = reactive({
       title: "heihei",
+      pClassName: "red",
+      props: {
+        class: "red",
+        id: "123",
+      },
       count: 0,
       handleClick() {
-        state.count++;
+        // state.count++;
+        state.props = {
+          class: "blue",
+        };
       },
     });
 
@@ -69,15 +77,46 @@ function mount(component, container) {
 
       // todo 实现 diff 算法
       console.log(prevTree, subTree);
+      diff(prevTree, subTree);
     }
   });
+}
+
+function diff(n1, n2) {
+  // 如果 n1 和 n2 是相同节点的话
+  if (n1.tag === n2.tag) {
+    // 先对比 props
+    const { props: oldProps, el } = n1;
+    const { props: newProps } = n2;
+    n2.el = el;
+
+    if (newProps) {
+      Object.keys(newProps).forEach((key) => {
+        // 新的老的都存在其当前的 prop
+        if (newProps[key] !== oldProps[key]) {
+          // el
+          el.setAttribute(key, newProps[key]);
+        }
+      });
+
+      // 新的不存在，老的存在
+      // 需要删除老的节点
+      Object.keys(oldProps).forEach((key) => {
+        if (!(key in newProps)) {
+          el.removeAttribute(key);
+        }
+      });
+    }
+  } else {
+    // replace tag
+  }
 }
 
 function patch(vdom, container) {
   // 初始化 subTree
   // element
   // 创建节点
-  const el = document.createElement(vdom.tag);
+  const el = (vdom.el = document.createElement(vdom.tag));
 
   // 设置 props -》 暂时没有
   if (vdom.props) {
