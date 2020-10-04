@@ -107,6 +107,27 @@ function diff(n1, n2) {
         }
       });
     }
+
+    // 核心思想就是枚举出来所有的情况
+    // string(new) - string(old)  string(new) - array(old)
+    // array(new) - string(old)  array(new) - array(old)
+
+    // 对比 children
+    // 新的节点如果是字符串的话
+    // 1. 新的节点是字符串
+    //    1. 老的节点是字符串，但是两者不相等  - 直接更新 textContent
+    //    2. 老的节点是数组，直接把老的节点都干掉，- 变成字符串
+
+    // 新的节点如果是数组的话
+    // 老的节点是字符串
+
+    // 先找出一个公共区域
+    // 新的有，旧的也有
+    // 然后去递归的调用 diff 即可
+
+    // 接着看看 new 的长 ，还是 old 长
+    // new 的长，那么就创建新的元素
+    // old 的长，那么就删除老的元素
   } else {
     // replace tag
   }
