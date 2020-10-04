@@ -16,25 +16,32 @@ const App = {
     //   },
     //   context.state.title
     // );
-
-    return h("div", context.state.props, [
-      h("p", null, context.state.count),
-      h(
-        "button",
-        {
-          onClick: context.state.handleClick,
-        },
-        "click"
-      ),
-    ]);
+    // return h("div", context.state.props, [
+    //   h("p", null, context.state.count),
+    //   h(
+    //     "button",
+    //     {
+    //       onClick: context.state.handleClick,
+    //     },
+    //     "click"
+    //   ),
+    // ]);
     // return h("div", { class: "red" }, [
     //   h("p", null, "this is a p tag"),
     //   h("p", null, "this is a second p"),
     // ]);
+    // oldChildren -> string
+    // return h(
+    //   "div",
+    //   { onClick: context.state.handleClick },
+    //   context.state.childString
+    // );
+    // oldChildren -> array
+    return h("div", null, context.state.childArray);
   },
 
   setup() {
-    const state = reactive({
+    window.state = reactive({
       title: "heihei",
       pClassName: "red",
       props: {
@@ -42,11 +49,16 @@ const App = {
         id: "123",
       },
       count: 0,
+      childString: "a",
+      childArray: [h("h1", null, "嘿嘿")],
       handleClick() {
         // state.count++;
-        state.props = {
-          class: "blue",
-        };
+        // state.props = {
+        //   class: "blue",
+        // };
+        state.childString = state.childArray;
+        // state.childString = "b";
+        // state.childArray = "b";
       },
     });
 
@@ -128,6 +140,50 @@ function diff(n1, n2) {
     // 接着看看 new 的长 ，还是 old 长
     // new 的长，那么就创建新的元素
     // old 的长，那么就删除老的元素
+    const oldChildren = n1.children || [];
+    const newChildren = n2.children || [];
+    if (typeof newChildren === "string") {
+      if (typeof oldChildren === "string") {
+        if (newChildren !== oldChildren) {
+          n1.el.textContent = newChildren;
+        }
+      } else {
+        // 老节点是数组
+        n1.el.textContent = newChildren;
+      }
+    } else if (Array.isArray(newChildren)) {
+      if (typeof oldChildren === "string") {
+        n1.el.innerHTML = ``;
+        newChildren.forEach((newVdom) => {
+          patch(newVdom, n1.el);
+        });
+      } else {
+        // 老的也是数组
+        // 基于key 来做优化
+        // 直接替换
+        // 公共部分 -> 新的替换老的
+        const commandLength = Math.min(oldChildren.length, newChildren.length);
+        for (let index = 0; index < commandLength; index++) {
+          const newVdom = newChildren[index];
+          const oldVdom = oldChildren[index];
+          diff(oldVdom, newVdom);
+        }
+        // 新节点比旧节点多出来的部分 -> 直接创建新的元素
+        if (newChildren.length > oldChildren.length) {
+          for (let index = commandLength; index < newChildren.length; index++) {
+            patch(newChildren[index], n1.el);
+          }
+        }
+
+        // 旧的节点比新的节点多出来的部分 -> 统统删除掉
+        if (oldChildren.length > newChildren.length) {
+          for (let index = commandLength; index < newChildren.length; index++) {
+            const oldVdom = oldChildren[index];
+            n1.el.removeChild(oldVdom.el);
+          }
+        }
+      }
+    }
   } else {
     // replace tag
   }
